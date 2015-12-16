@@ -497,9 +497,12 @@ class Cluster(object):
             content = "%s%s=%s:r1\n" % (content, k, v)
 
         for node in self.nodelist():
-            topology_file = os.path.join(node.get_conf_dir(), 'cassandra-topology.properties')
-            with open(topology_file, 'w') as f:
-                f.write(content)
+            if node.is_live():
+                print_("Not writing topo for live node.")
+            else:
+                topology_file = os.path.join(node.get_conf_dir(), 'cassandra-topology.properties')
+                with open(topology_file, 'w') as f:
+                    f.write(content)
 
     def enable_ssl(self, ssl_path, require_client_auth):
         shutil.copyfile(os.path.join(ssl_path, 'keystore.jks'), os.path.join(self.get_path(), 'keystore.jks'))
