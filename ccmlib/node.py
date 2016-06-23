@@ -1867,17 +1867,19 @@ def _get_load_from_info_output(info):
 
 
 def _grep_log_for_errors(log):
+    def log_line_category(line):
+        match = re.search(r'(INFO|DEBUG|WARN|ERROR)', line)
+        return match.group(0) if match else 'ERROR_EXTRA'
+
     matchings = []
     it = iter(log.splitlines())
     for line in it:
-        is_error_line = ('ERROR' in line
-                         and 'DEBUG' not in line.split('ERROR')[0])
-        if is_error_line:
+        if log_line_category(line) == 'ERROR':
             matchings.append([line])
             try:
-                it, peeker = itertools.tee(it)
-                while 'INFO' not in next(peeker):
-                    matchings[-1].append(next(it))
+                it2, peeker = itertools.tee(it)
+                while log_line_category(next(peeker)) == 'ERROR_EXTRA':
+                    matchings[-1].append(next(it2))
             except StopIteration:
                 break
     return matchings
